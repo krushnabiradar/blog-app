@@ -12,7 +12,7 @@ import User from "./Schema/User.js";
 const server = express();
 let PORT = 3000;
 
-let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
+let emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/; // regex for email
 let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for password
 
 server.use(express.json());
@@ -122,6 +122,16 @@ server.post("/signin", (req, res) => {
     .catch((err) => {
       return res.status(500).json({ error: err.message });
     });
+});
+
+server.get("/users", (req, res) => {
+  try {
+    const allUsers = User.find();
+    res.status(200).json(allUsers);
+  } catch (error) {
+    console.log(error.message);
+    res.json({ error: error.message });
+  }
 });
 
 server.listen(PORT, () => {

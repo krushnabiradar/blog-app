@@ -1,20 +1,30 @@
 import axios from "axios";
-import { useRef } from "react";
+import { useContext, useRef } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { UserContext } from "../App";
 import AnimationWrapper from "../common/page-animation";
+import { storeInSession } from "../common/session";
 import InputBox from "../components/input.component";
 import googleIcon from "../imgs/google.png";
 
 const UserAuthForm = ({ type }) => {
   const authForm = useRef();
 
+  let {
+    userAuth: { access_token },
+    setUserAuth,
+  } = useContext(UserContext);
+  // console.log(access_token)
+
   const UserAuthThroughServer = (serverRoute, formData) => {
-    console.log("http://localhost:3000" + serverRoute, formData);
+    // console.log(import.meta.env.VITE_SERVER_DOMAIN  + serverRoute, formData);
     axios
-      .post("http://localhost:3000" + serverRoute, formData)
+      .post(import.meta.env.VITE_SERVER_DOMAIN + serverRoute, formData)
       .then(({ data }) => {
-        console.log(data);
+        storeInSession("user", JSON.stringify(data));
+        // console.log(sessionStorage)
+        setUserAuth(data);
       })
       .catch(({ response }) => {
         toast.error(response.data.error);
@@ -26,7 +36,7 @@ const UserAuthForm = ({ type }) => {
 
     let serverRoute = type == "sign-in" ? "/signin" : "/signup";
 
-    let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
+    let emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/; // regex for email
     let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for password
 
     // formData
@@ -60,11 +70,12 @@ const UserAuthForm = ({ type }) => {
     UserAuthThroughServer(serverRoute, formData);
   };
 
-  return (
+  return access_token ? (
+    <Navigate to="/" />
+  ) : (
     <AnimationWrapper keyValue={type}>
       <section className="h-cover flex item-center justify-center">
         <Toaster />
-
         <form ref={authForm} className="w-[80%] max-w-[400px]">
           <h1 className="text-4xl font-gelasio capitalize text-center mb-24">
             {type == "sign-in" ? "Welcome back" : "Join us today"}
@@ -72,7 +83,7 @@ const UserAuthForm = ({ type }) => {
 
           {type != "sign-in" ? (
             <InputBox
-              name="fullName"
+              name="fullname"
               type="text"
               placeholder="Full Name"
               icon="fi-rr-user"
@@ -130,5 +141,4 @@ const UserAuthForm = ({ type }) => {
     </AnimationWrapper>
   );
 };
-
 export default UserAuthForm;
